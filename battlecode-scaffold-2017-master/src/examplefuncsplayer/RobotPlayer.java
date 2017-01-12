@@ -4,8 +4,8 @@ import battlecode.common.*;
 public strictfp class RobotPlayer {
     static RobotController rc;
     
-    int enemyBroadcastedLocations[];
-    int teamBroadcastedLocations[];
+    MapLocation enemyBroadcastedLocations[];
+    MapLocation teamBroadcastedLocations[];
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -39,14 +39,13 @@ public strictfp class RobotPlayer {
             	break;
         }
 	}
-    static void senseLocations() throws GameActionException {
-    	int enemyLocations[] = new int[1000];
-    	int teammateLocations[] = new int[1000];
-    	for (int i = 0; i < 1000; i++)
-    	{
-    		
-    	}
+    static MapLocation findClosestEnemy() throws GameActionException {
+        MapLocation closestEnemy = MapLocation;
+        for (int i = 0; i < 1000; i++) {
+            rc.senseNearbyRobots()
+        }
     }
+    static int treeDistance
     static void runArchon() throws GameActionException {
         System.out.println("I'm an archon!");
         // The code you want your robot to perform every round should be in this loop
@@ -81,11 +80,60 @@ public strictfp class RobotPlayer {
     }
     static void runTank () throws GameActionException {
     	System.out.println("Tank Spawned");
-    	
+        Team enemy = rc.getTeam().opponent();
+        while (true) {
+            try {
+
+            } catch (Exception e) {
+                System.out.println("Tank Exception");
+                e.printStackTrace();
+            }
+        }
     }
-    
+    static BulletInfo findClosestBullet (MapLocation myLocation)
+    {
+        BulletInfo[] bullets = rc.senseNearbyBullets();
+        int positionInArrayOfMin = 0;
+        float minDistance = bullets[0].location.distanceTo(myLocation);
+        for (int i = 1; i < bullets.length(); i++) {
+            if (bullets[i].location.distanceTo(myLocation) < minDistance) {
+                minDistance = bullets[i].getLocation().distanceTo(myLocation);
+                positionInArrayOfMin = i;
+            }
+        }
+        BulletInfo closestBullet = bullets[i];
+        return closestBullet;
+    }
+    static void dodgeBullet (MapLocation myLocation) {
+        BulletInfo[] bullets = rc.senseNearbyBullets();
+        BulletInfo closestBullet;
+        boolean collisionBool = false;
+        // Loop checks to see if any of the sensed nearby bullets will collide with the robot
+        for (int j = 0; j < bullets.length; j++)
+        {
+            if (willCollideWithMe(bullets[j]) == true)
+            {
+                collisionBool = true;
+            }
+        }
+        // Statement below executes if the robot will be hit by a bullet
+        if (collisionBool == true){
+            closestBullet = findClosestBullet(rc.getLocation());
+            Direction awayFromBullet = closestBullet.dir;
+        }
+    }
     static void runScout () throws GameActionException {
     	System.out.println("Scout spawned");
+    	Team enemy = rc.getTeam().opponent();
+    	while (true)
+        {
+            try {
+                // See if there are any nearby enemy robots
+                RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
+            } catch (Exception e) {
+
+            }
+        }
     }
 	static void runGardener() throws GameActionException {
         System.out.println("I'm a gardener!");
