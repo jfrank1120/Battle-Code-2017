@@ -1,12 +1,13 @@
 package examplefuncsplayer;
 import battlecode.common.*;
 import java.util.*;
-
 public strictfp class RobotPlayer {
     static RobotController rc;
     static Direction[] dirList = new Direction[4];
     static Direction goingDir;
     static Random rand;
+    static Team enemy = rc.getTeam().opponent();
+    //public static float radians = (float) -Math.PI + 2*Math.PI*((float));
     MapLocation enemyBroadcastedLocations[];
     MapLocation teamBroadcastedLocations[];
     /**
@@ -49,11 +50,13 @@ public strictfp class RobotPlayer {
             System.out.println("made new direction "+dirList[i]);
         }
     }
-    static MapLocation findClosestEnemy() throws GameActionException {
+    static MapLocation findClosestEnemy(int robotID) throws GameActionException {
         MapLocation closestEnemy = rc.getLocation();
+        RobotInfo[] locationOfEnemys = new RobotInfo[100];
         for (int i = 0; i < 1000; i++) {
-            //rc.senseNearbyRobots().
+            locationOfEnemys[i] = rc.senseRobot(robotID);
         }
+
         return closestEnemy;
     }
     static int treeDistance;
@@ -91,7 +94,6 @@ public strictfp class RobotPlayer {
     }
     static void runTank () throws GameActionException {
     	System.out.println("Tank Spawned");
-        Team enemy = rc.getTeam().opponent();
         while (true) {
             try {
             wander();
@@ -104,19 +106,29 @@ public strictfp class RobotPlayer {
     static BulletInfo findClosestBullet (MapLocation myLocation)
     {
         int i;
+        int j = 0;
         BulletInfo[] bullets = rc.senseNearbyBullets();
+        BulletInfo[] willCollideBullets = new BulletInfo[100];
+            for (i = 0; i < bullets.length; i++)
+        {
+            if (willCollideWithMe(bullets[i]) == true)
+            {
+                willCollideBullets[j] = bullets[i];
+                j++;
+            }
+        }
         int positionInArrayOfMin = 0;
         float minDistance = bullets[0].location.distanceTo(myLocation);
         for (i = 1; i < bullets.length; i++) {
-            if (bullets[i].location.distanceTo(myLocation) < minDistance) {
-                minDistance = bullets[i].getLocation().distanceTo(myLocation);
+            if (willCollideBullets[i].location.distanceTo(myLocation) < minDistance) {
+                minDistance = willCollideBullets[i].getLocation().distanceTo(myLocation);
                 positionInArrayOfMin = i;
             }
         }
-        BulletInfo closestBullet = bullets[i];
+        BulletInfo closestBullet = willCollideBullets[positionInArrayOfMin];
         return closestBullet;
     }
-    static void dodgeBullet (MapLocation myLocation) {
+    static void dodgeBullet (MapLocation currentLocation, RobotInfo id) {
         BulletInfo[] bullets = rc.senseNearbyBullets();
         BulletInfo closestBullet;
         boolean collisionBool = false;
@@ -131,8 +143,17 @@ public strictfp class RobotPlayer {
         // Statement below executes if the robot will be hit by a bullet
         if (collisionBool == true){
             closestBullet = findClosestBullet(rc.getLocation());
-            Direction awayFromBullet = closestBullet.dir;
+            Direction dodgingAngle = closestBullet.getDir().opposite();
+            if (rc.canMove(dodgingAngle)) {
+                rc.move(dodgingAngle);
+            }
+            else {
+                
+            }
         }
+    }
+    static void attackArchons () {
+        //Direction.get
     }
     static void runScout () throws GameActionException {
     	System.out.println("Scout spawned");
@@ -147,6 +168,9 @@ public strictfp class RobotPlayer {
             }
         }
     }
+    static void iLiveWithThePoolsAndTreeIs() throws GameActionException {
+
+    }
 	static void runGardener() throws GameActionException {
         System.out.println("I'm a gardener!");
 
@@ -155,7 +179,6 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-
                 // Listen for home archon's location
                 int xPos = rc.readBroadcast(0);
                 int yPos = rc.readBroadcast(1);
