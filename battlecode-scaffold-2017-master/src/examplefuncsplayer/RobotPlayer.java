@@ -128,29 +128,12 @@ public strictfp class RobotPlayer {
         BulletInfo closestBullet = willCollideBullets[positionInArrayOfMin];
         return closestBullet;
     }
-    static void dodgeBullet (MapLocation currentLocation, RobotInfo id) {
-        BulletInfo[] bullets = rc.senseNearbyBullets();
-        BulletInfo closestBullet;
-        boolean collisionBool = false;
-        // Loop checks to see if any of the sensed nearby bullets will collide with the robot
-        for (int j = 0; j < bullets.length; j++)
-        {
-            if (willCollideWithMe(bullets[j]) == true)
-            {
-                collisionBool = true;
-            }
-        }
-        // Statement below executes if the robot will be hit by a bullet
-        if (collisionBool == true){
-            closestBullet = findClosestBullet(rc.getLocation());
-            Direction dodgingAngle = closestBullet.getDir().opposite();
-            if (rc.canMove(dodgingAngle)) {
-                rc.move(dodgingAngle);
-            }
-            else {
-                
-            }
-        }
+    static boolean dodgeBullet (MapLocation currentLocation, RobotInfo id) throws GameActionException {
+        BulletInfo incomingBullet = findClosestBullet(rc.getLocation());
+        Direction towards = incomingBullet.getDir();
+        MapLocation leftGoal = rc.getLocation().add(towards.rotateLeftDegrees(90), rc.getType().bodyRadius);
+        MapLocation rightGoal = rc.getLocation().add(towards.rotateRightDegrees(90), rc.getType().bodyRadius);
+        return(tryMove(towards.rotateRightDegrees(90)) || tryMove(towards.rotateLeftDegrees(90)));
     }
     static void attackArchons () {
         //Direction.get
@@ -343,23 +326,23 @@ public strictfp class RobotPlayer {
     static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
 
         // First, try intended direction
-        if (rc.canMove(dir)) {
+        if (!rc.hasMoved() && rc.canMove(dir)) {
             rc.move(dir);
             return true;
         }
 
         // Now try a bunch of similar angles
-        boolean moved = false;
+        //boolean moved = rc.hasMoved();
         int currentCheck = 1;
 
         while(currentCheck<=checksPerSide) {
             // Try the offset of the left side
-            if(rc.canMove(dir.rotateLeftDegrees(degreeOffset*currentCheck))) {
+            if(!rc.hasMoved() && rc.canMove(dir.rotateLeftDegrees(degreeOffset*currentCheck))) {
                 rc.move(dir.rotateLeftDegrees(degreeOffset*currentCheck));
                 return true;
             }
             // Try the offset on the right side
-            if(rc.canMove(dir.rotateRightDegrees(degreeOffset*currentCheck))) {
+            if(! rc.hasMoved() && rc.canMove(dir.rotateRightDegrees(degreeOffset*currentCheck))) {
                 rc.move(dir.rotateRightDegrees(degreeOffset*currentCheck));
                 return true;
             }
