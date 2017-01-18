@@ -7,7 +7,12 @@ public strictfp class RobotPlayer {
     static Direction goingDir;
     static Random rand;
     static Team enemy = rc.getTeam().opponent();
-    //public static float radians = (float) -Math.PI + 2*Math.PI*((float));
+    static final int ARCHON_X_POS_CHANNEL = 0;
+    static final int ARCHON_Y_POS_CHANNEL = 1;
+    static final int ENEMY_ARCHON_X_CHANNEL = 2;
+    static final int ENEMY_ARCHON_Y_CHANNEL = 3;
+    static final int ENEMY_TREE_X_CHANNEL = 4;
+    static final int ENEMY_TREE_Y_CHANNEL = 5;
     MapLocation enemyBroadcastedLocations[];
     MapLocation teamBroadcastedLocations[];
     /**
@@ -51,60 +56,56 @@ public strictfp class RobotPlayer {
         }
     }
     static MapLocation findClosestEnemy(int robotID) throws GameActionException {
-        MapLocation closestEnemy = rc.getLocation();
+        RobotInfo closestEnemy;
         RobotInfo[] locationOfEnemys = new RobotInfo[100];
         for (int i = 0; i < 1000; i++) {
             locationOfEnemys[i] = rc.senseRobot(robotID);
         }
-
-        return closestEnemy;
+        float minDistance = (float) 0.0;
+        int posInArrayOfClosestEnemy = 0;
+        for (int i = 0; i < locationOfEnemys.length; i++)
+        {
+            if (locationOfEnemys[i].getLocation().distanceTo(rc.getLocation()) < minDistance){
+                minDistance = locationOfEnemys[i].getLocation().distanceTo((rc.getLocation()));
+                posInArrayOfClosestEnemy = i;
+            }
+            if (locationOfEnemys[i].getLocation().distanceTo(rc.getLocation()) == minDistance) {
+                // TODO - Add action if there are two enemies that are the same distance from the robot
+            }
+        }
+        closestEnemy = locationOfEnemys[posInArrayOfClosestEnemy];
+        MapLocation locationOfClosestEnemy = closestEnemy.getLocation();
+        return locationOfClosestEnemy;
     }
     static int treeDistance;
-    static void runArchon() throws GameActionException {
-        System.out.println("I'm an archon!");
-        // The code you want your robot to perform every round should be in this loop
-        while (true) {
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
-            try {
-
-                // Generate a random direction
-                Direction dir = randomDirection();
-
-                // Randomly attempt to build a gardener in this direction
-                if (rc.canHireGardener(dir) && Math.random() < .01) {
-                    rc.hireGardener(dir);
-                }
-
-                // Move randomly
-                tryMove(randomDirection());
-
-                // Broadcast archon's location for other robots on the team to know
-                MapLocation myLocation = rc.getLocation();
-                rc.broadcast(0,(int)myLocation.x);
-                rc.broadcast(1,(int)myLocation.y);
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
-                Clock.yield();
-
-            } catch (Exception e) {
-                System.out.println("Archon Exception");
-                e.printStackTrace();
+    // TODO  create method that finds the closest tree and either destroys it or hides behind it
+    static MapLocation[] locateAllyArchons () throws GameActionException{
+        MapLocation[] locationsOfArchons = new MapLocation[1];
+        // Creates arrays to hold the X and Y cordinates of the Archons
+        int[] allyArchonXPos = new int[1];
+        int[] allyArchonYPos = new int[1];
+        try {
+            // Appends the X cordinates of ally archons to the array
+            for (int i = 0; i < 2; i++) {
+                allyArchonXPos[i] = rc.readBroadcast(ARCHON_X_POS_CHANNEL);
             }
-        }
-    }
-    static void runTank () throws GameActionException {
-    	System.out.println("Tank Spawned");
-        while (true) {
-            try {
-            wander();
-            } catch (Exception e) {
-                System.out.println("Tank Exception");
-                e.printStackTrace();
+            // Appends the Y cordinares of ally archones to the array
+            for (int i = 0; i < 2; i++) {
+                allyArchonYPos[i] = rc.readBroadcast(ARCHON_Y_POS_CHANNEL);
             }
+        } catch (Exception e)
+        {
+            System.out.println("Unable to find ally archons");
         }
+        MapLocation positionOfAllyArchon1;
+        positionOfAllyArchon1 = new MapLocation((float)allyArchonXPos[0],(float)allyArchonYPos[0]);
+        MapLocation positionOfAllyArchon2;
+        positionOfAllyArchon2 = new MapLocation((float)allyArchonXPos[1],(float)allyArchonYPos[1]);
+        locationsOfArchons[0] = positionOfAllyArchon1;
+        locationsOfArchons[1] = positionOfAllyArchon2;
+        return locationsOfArchons;
     }
-    static BulletInfo findClosestBullet (MapLocation myLocation)
-    {
+    static BulletInfo findClosestBullet (MapLocation myLocation) throws GameActionException {
         int i;
         int j = 0;
         BulletInfo[] bullets = rc.senseNearbyBullets();
@@ -136,8 +137,14 @@ public strictfp class RobotPlayer {
         return(tryMove(towards.rotateRightDegrees(90)) || tryMove(towards.rotateLeftDegrees(90)));
     }
     static void attackArchons () {
+        // TODO finish method that makes robots go attack enemy archon whent they know it's position
         //Direction.get
     }
+    static void iLiveWithThePoolsAndTreeIs() throws GameActionException {
+        //TODO create method that waters trees along with other common gardner actions
+    }
+    // Below is all run methods for the different types of robots
+    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     static void runScout () throws GameActionException {
     	System.out.println("Scout spawned");
     	Team enemy = rc.getTeam().opponent();
@@ -146,13 +153,20 @@ public strictfp class RobotPlayer {
             try {
                 // See if there are any nearby enemy robots
                 RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
+                for (int i = 0; i < robots.length; i++)
+                {
+                    // Checks to see if enemy robots are an archon
+                    if (robots[i].type == RobotType.ARCHON)
+                    {
+                        // Calls out x and y position of the enemy archon
+                        rc.broadcast(0, (int)robots[i].getLocation().x);
+                        rc.broadcast(1, (int)robots[i].getLocation().y);
+                    }
+                }
             } catch (Exception e) {
 
             }
         }
-    }
-    static void iLiveWithThePoolsAndTreeIs() throws GameActionException {
-
     }
 	static void runGardener() throws GameActionException {
         System.out.println("I'm a gardener!");
@@ -266,6 +280,50 @@ public strictfp class RobotPlayer {
             }
         }
     }
+    static void runArchon() throws GameActionException {
+        System.out.println("I'm an archon!");
+        // The code you want your robot to perform every round should be in this loop
+        while (true) {
+            // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
+            try {
+
+                // Generate a random direction
+                Direction dir = randomDirection();
+
+                // Randomly attempt to build a gardener in this direction
+                if (rc.canHireGardener(dir) && Math.random() < .01) {
+                    rc.hireGardener(dir);
+                }
+
+                // Move randomly
+                tryMove(randomDirection());
+
+                // Broadcast archon's location for other robots on the team to know
+                MapLocation myLocation = rc.getLocation();
+                rc.broadcast(ARCHON_X_POS_CHANNEL,(int)myLocation.x);
+                rc.broadcast(ARCHON_Y_POS_CHANNEL,(int)myLocation.y);
+
+                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+                Clock.yield();
+
+            } catch (Exception e) {
+                System.out.println("Archon Exception");
+                e.printStackTrace();
+            }
+        }
+    }
+    static void runTank () throws GameActionException {
+        System.out.println("Tank Spawned");
+        while (true) {
+            try {
+                wander();
+            } catch (Exception e) {
+                System.out.println("Tank Exception");
+                e.printStackTrace();
+            }
+        }
+    }
+    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     public static boolean modGood(float number,float spacing, float fraction){
         return (number%spacing)<spacing*fraction;
     }
