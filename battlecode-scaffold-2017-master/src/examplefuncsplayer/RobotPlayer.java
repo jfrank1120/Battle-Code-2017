@@ -170,6 +170,7 @@ public strictfp class RobotPlayer {
     static void attackArchons () throws GameActionException {
         // TODO finish method that makes robots go attack enemy archon whent they know it's position
         int enemyArchonX = rc.readBroadcast(ENEMY_ARCHON_X_CHANNEL);
+        int enemyArchonY = rc.readBroadcast(ENEMY_ARCHON_Y_CHANNEL);
     }
     static void iLiveWithThePoolsAndTreeIs() throws GameActionException {
         //TODO create method that waters trees along with other common gardner actions
