@@ -1,5 +1,7 @@
 package examplefuncsplayer;
 import battlecode.common.*;
+import sun.reflect.generics.tree.Tree;
+
 import java.util.*;
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -13,8 +15,13 @@ public strictfp class RobotPlayer {
     static final int ENEMY_ARCHON_Y_CHANNEL = 3;
     static final int ENEMY_TREE_X_CHANNEL = 4;
     static final int ENEMY_TREE_Y_CHANNEL = 5;
-    MapLocation enemyBroadcastedLocations[];
-    MapLocation teamBroadcastedLocations[];
+    static final int NEUTRAL_TREE_X_CHANNEL = 6;
+    static final int NEUTRAL_TREE_Y_CHANNEL = 7;
+    static TreeInfo[] allyTrees = new TreeInfo[100];
+    static TreeInfo[] enemyTrees = new TreeInfo[100];
+    static TreeInfo[] neutralTrees = new TreeInfo[100];
+    MapLocation[] enemyBroadcastedLocations[];
+    MapLocation[] teamBroadcastedLocations[];
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -79,6 +86,30 @@ public strictfp class RobotPlayer {
     }
     static int treeDistance;
     // TODO  create method that finds the closest tree and either destroys it or hides behind it
+    static MapLocation findClosestTree (int RobotID) throws GameActionException {
+        MapLocation closestTree = new MapLocation((float)0.0,(float)0.0);
+        int j = 0;
+        int k = 0;
+        int l = 0;
+        TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+        for (int i = 0; i < nearbyTrees.length; i++)
+        {
+            if (nearbyTrees[i].team == enemy){
+                enemyTrees[j] = nearbyTrees[i];
+                j++;
+            }
+            else if (nearbyTrees[i].team.isPlayer() == true ) {
+                allyTrees[k] = nearbyTrees[i];
+                k++;
+            }
+            else {
+                neutralTrees[l] = nearbyTrees[i];
+                l++;
+            }
+
+        }
+        return closestTree;
+    }
     static MapLocation[] locateAllyArchons () throws GameActionException{
         MapLocation[] locationsOfArchons = new MapLocation[1];
         // Creates arrays to hold the X and Y cordinates of the Archons
@@ -136,9 +167,9 @@ public strictfp class RobotPlayer {
         MapLocation rightGoal = rc.getLocation().add(towards.rotateRightDegrees(90), rc.getType().bodyRadius);
         return(tryMove(towards.rotateRightDegrees(90)) || tryMove(towards.rotateLeftDegrees(90)));
     }
-    static void attackArchons () {
+    static void attackArchons () throws GameActionException {
         // TODO finish method that makes robots go attack enemy archon whent they know it's position
-        //Direction.get
+        int enemyArchonX = rc.readBroadcast(ENEMY_ARCHON_X_CHANNEL);
     }
     static void iLiveWithThePoolsAndTreeIs() throws GameActionException {
         //TODO create method that waters trees along with other common gardner actions
