@@ -476,4 +476,61 @@ public strictfp class RobotPlayer {
 
         return (perpendicularDist <= rc.getType().bodyRadius);
     }
+    
+    /**
+     *
+     * @param map A MapLocation to convert to integer representation
+     * @return An array arr such that:
+     *          arr[0] - integer part of x
+     *          arr[1] - decimal part of x * 10^6 and rounded
+     *          arr[2] - integer part of y
+     *          arr[3] - decimal part of y * 10^6 and rounded
+     */
+    static int[] convertMapLocation(MapLocation map) {
+        float xcoord = map.x;
+        float ycoord = map.y;
+        int[] returnarray = new int[4];
+        returnarray[0] = Math.round(xcoord - (xcoord % 1));
+        returnarray[1] = Math.toIntExact(Math.round((xcoord % 1)*Math.pow(10,6)));
+        returnarray[2] = Math.round(ycoord - (ycoord % 1));
+        returnarray[3] = Math.toIntExact(Math.round((ycoord % 1)*Math.pow(10,6)));
+        return(returnarray);
+    }
+
+    /**
+     *
+     * @param arr An array arr such that:
+     *          arr[0] - integer part of x
+     *          arr[1] - decimal part of x * 10^6 and rounded
+     *          arr[2] - integer part of y
+     *          arr[3] - decimal part of y * 10^6 and rounded
+     * @return A MapLocation instantiated from the coordinates given by array
+     */
+    static MapLocation convertLocationInts(int[] arr) {
+        float xcoord = (float)(arr[0] + arr[1]/Math.pow(10,6));
+        float ycoord = (float)(arr[2] + arr[3]/Math.pow(10,6));
+        return(new MapLocation(xcoord,ycoord));
+    }
+
+    static MapLocation readLocation(int firstChannel) throws GameActionException{
+        int[] array = new int[4];
+        array[0] = rc.readBroadcast(firstChannel);
+        array[1] = rc.readBroadcast(firstChannel+1);
+        array[2] = rc.readBroadcast(firstChannel+2);
+        array[3] = rc.readBroadcast(firstChannel+3);
+        return convertLocationInts(array);
+    }
+
+    static void writeLocation(MapLocation map, int firstChannel) throws GameActionException{
+        int[] arr = convertMapLocation(map);
+        rc.broadcast(firstChannel, arr[0]);
+        rc.broadcast(firstChannel + 1, arr[1]);
+        rc.broadcast(firstChannel+2, arr[2]);
+        rc.broadcast(firstChannel+3, arr[3]);
+    }
+
+    static void goTowards(MapLocation map) throws GameActionException {
+        tryMove(rc.getLocation().directionTo(map));
+    }
+
 }
